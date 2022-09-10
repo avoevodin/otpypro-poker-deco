@@ -24,7 +24,6 @@
 # Можно свободно определять свои функции и т.п.
 # -----------------
 import itertools
-from pprint import pprint
 
 from more_itertools import all_equal, sliding_window
 
@@ -256,11 +255,5 @@ def test_best_wild_hand():
 
 
 if __name__ == "__main__":
-    # test_best_hand()
+    test_best_hand()
     test_best_wild_hand()
-    # print(flush("8C 9C TC 5C JS"))
-    # print(hand_rank(("JD", "TC", "7C", "7D", "7S")))
-    # print(best_hand("6C 7C 8C 9C TC 5C JS".split()))
-    # print(best_wild_hand("TD TC 5H 5C 7C ?R ?B".split()))
-    # pprint(tuple(get_red_joker_vars()))
-    # pprint(tuple(get_black_joker_vars()))
