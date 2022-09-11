@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from functools import update_wrapper
+from functools import wraps, update_wrapper
+from pprint import pprint
 
 
 def disable():
@@ -23,28 +21,70 @@ def decorator():
     return
 
 
-def countcalls():
+def countcalls(func):
     """Decorator that counts calls made to the function decorated."""
-    return
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        wrapper.calls += 1
+        print(f"Function {func.__name__!r} was called {wrapper.calls}x")
+        return func(*args, **kwargs)
+
+    wrapper.calls = 0
+    return wrapper
 
 
-def memo():
+def memo(func):
     """
     Memoize a function so that it caches all return values for
     faster future lookups.
     """
-    return
+    kwd_mark = object()
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        key = hash(args + (kwd_mark,) + tuple(sorted(kwargs.items())))
+        result = wrapper.cache.get(key)
+        if not result:
+            result = func(*args, **kwargs)
+            wrapper.cache[key] = result
+        return result
+
+    wrapper.cache = {}
+    return wrapper
 
 
-def n_ary():
+def n_ary(func):
     """
     Given binary function f(x, y), return an n_ary function such
     that f(x, y, z) = f(x, f(y,z)), etc. Also allow f(x) = x.
     """
-    return
+
+    @wraps(func)
+    def wrapper(*args):
+        if len(args) == 1:
+            return args[0]
+        elif len(args) > 2:
+            return wrapper(*args[:-2], func(*args[-2:]))
+        else:
+            return func(*args)
+
+    return wrapper
 
 
-def trace():
+def trace_args_decorator(decorator_to_enhance):
+    def decorator_maker(prefix="____"):
+        def decorator_wrapper(func):
+
+            return decorator_to_enhance(func, prefix)
+
+        return decorator_wrapper
+
+    return decorator_maker
+
+
+@trace_args_decorator
+def trace(func, prefix):
     """Trace calls made to function decorated.
 
     @trace("____")
@@ -64,7 +104,29 @@ def trace():
      <-- fib(3) == 3
 
     """
-    return
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        current_prefix = wrapper.prefix
+        wrapper.prefix += prefix
+
+        args_str = ", ".join([str(i) for i in args])
+        kwargs_str = ", ".join([f"{k}={v}" for k, v in kwargs])
+        all_args_str = ", ".join(filter(lambda x: x, (args_str, kwargs_str)))
+
+        print(current_prefix, "-->", f"{func.__name__}({all_args_str})")
+        result = func(*args, **kwargs)
+        print(
+            current_prefix,
+            "<--",
+            f"{func.__name__}({all_args_str}) == {result}",
+        )
+
+        wrapper.prefix = wrapper.prefix[: -len(prefix)]
+        return result
+
+    wrapper.prefix = ""
+    return wrapper
 
 
 @memo
@@ -81,7 +143,7 @@ def bar(a, b):
     return a * b
 
 
-@countcalls
+# @countcalls
 @trace("####")
 @memo
 def fib(n):
@@ -105,5 +167,10 @@ def main():
     print(fib.calls, "calls made")
 
 
+def main_test():
+    print(fib(3))
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    main_test()
