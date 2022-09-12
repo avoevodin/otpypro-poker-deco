@@ -12,17 +12,6 @@ class CallsCount(object):
         self.calls += 1
 
 
-def disable():
-    """
-    Disable a decorator by re-assigning the decorator's name
-    to this function. For example, to turn off memoization:
-
-    >>> memo = disable
-
-    """
-    return
-
-
 def decorator(wrapped):
     """
     Decorate a decorator so that it inherits the docstrings
@@ -33,6 +22,22 @@ def decorator(wrapped):
         return update_wrapper(decorator_to_update, wrapped)
 
     return decorator_update_wrapper
+
+
+def disable(func):
+    """
+    Disable a decorator by re-assigning the decorator's name
+    to this function. For example, to turn off memoization:
+
+    >>> memo = disable
+
+    """
+
+    @decorator(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def countcalls(func):
@@ -56,7 +61,6 @@ def memo(func):
     """
 
     kwd_mark = object()
-
     # @wraps(func)
     @decorator(func)
     def wrapper(*args, **kwargs):
@@ -69,6 +73,7 @@ def memo(func):
             wrapper.calls.add_call()
         return result
 
+    print("memo", func)
     wrapper.cache = {}
     return wrapper
 
@@ -150,6 +155,9 @@ def trace(func, prefix):
     return wrapper
 
 
+# memo = disable
+
+
 @memo
 @countcalls
 @n_ary
@@ -182,9 +190,8 @@ def main():
     print(bar(4, 3, 2))
     print(bar(4, 3, 2, 1))
     print("bar was called", bar.calls, "times")
-
     print(fib.__doc__)
-    fib(3)
+    fib(5)
     print(fib.calls, "calls made")
 
 
