@@ -1,5 +1,16 @@
-from functools import wraps, update_wrapper
+from functools import wraps, update_wrapper, WRAPPER_ASSIGNMENTS, WRAPPER_UPDATES
 from pprint import pprint
+
+
+class CallsCount(object):
+    def __init__(self):
+        self.calls = 0
+
+    def __str__(self):
+        return f"{self.calls}"
+
+    def add_call(self):
+        self.calls += 1
 
 
 def disable():
@@ -13,24 +24,32 @@ def disable():
     return
 
 
-def decorator():
+def decorator(wrapped):
     """
     Decorate a decorator so that it inherits the docstrings
     and stuff from the function it's decorating.
     """
-    return
+
+    def decorator_update_wrapper(decorator_to_update):
+        return update_wrapper(decorator_to_update, wrapped)
+
+    return decorator_update_wrapper
 
 
 def countcalls(func):
     """Decorator that counts calls made to the function decorated."""
 
-    @wraps(func)
+    # @wraps(func)
+    @decorator(func)
     def wrapper(*args, **kwargs):
-        wrapper.calls += 1
-        print(f"Function {func.__name__!r} was called {wrapper.calls}x")
+        wrapper.calls.add_call()
+        # print("wr", wrapper.__dict__)
+        # print("func_dict", func.__dict__)
+        # print("func", func)
+        # print(f"Function {func.__name__!r} was called {wrapper.calls}x")
         return func(*args, **kwargs)
 
-    wrapper.calls = 0
+    wrapper.calls = CallsCount()
     return wrapper
 
 
@@ -39,15 +58,22 @@ def memo(func):
     Memoize a function so that it caches all return values for
     faster future lookups.
     """
+
     kwd_mark = object()
 
-    @wraps(func)
+    # @wraps(func)
+    @decorator(func)
     def wrapper(*args, **kwargs):
         key = hash(args + (kwd_mark,) + tuple(sorted(kwargs.items())))
         result = wrapper.cache.get(key)
+        # print("wr", wrapper.__dict__)
+        # print("func_dict", func.__dict__)
+        # print("func", func)
         if not result:
             result = func(*args, **kwargs)
             wrapper.cache[key] = result
+        elif hasattr(wrapper, "calls"):
+            wrapper.calls.add_call()
         return result
 
     wrapper.cache = {}
@@ -60,7 +86,8 @@ def n_ary(func):
     that f(x, y, z) = f(x, f(y,z)), etc. Also allow f(x) = x.
     """
 
-    @wraps(func)
+    # @wraps(func)
+    @decorator(func)
     def wrapper(*args):
         if len(args) == 1:
             return args[0]
@@ -105,7 +132,8 @@ def trace(func, prefix):
 
     """
 
-    @wraps(func)
+    # @wraps(func)
+    @decorator(func)
     def wrapper(*args, **kwargs):
         current_prefix = wrapper.prefix
         wrapper.prefix += prefix
@@ -143,7 +171,7 @@ def bar(a, b):
     return a * b
 
 
-# @countcalls
+@countcalls
 @trace("####")
 @memo
 def fib(n):
@@ -172,5 +200,5 @@ def main_test():
 
 
 if __name__ == "__main__":
-    # main()
-    main_test()
+    main()
+    # main_test()
