@@ -1,5 +1,4 @@
-from functools import wraps, update_wrapper, WRAPPER_ASSIGNMENTS, WRAPPER_UPDATES
-from pprint import pprint
+from functools import update_wrapper
 
 
 class CallsCount(object):
@@ -43,9 +42,6 @@ def countcalls(func):
     @decorator(func)
     def wrapper(*args, **kwargs):
         wrapper.calls.add_call()
-        # print("wr", wrapper.__dict__)
-        # print("func_dict", func.__dict__)
-        # print("func", func)
         # print(f"Function {func.__name__!r} was called {wrapper.calls}x")
         return func(*args, **kwargs)
 
@@ -66,9 +62,6 @@ def memo(func):
     def wrapper(*args, **kwargs):
         key = hash(args + (kwd_mark,) + tuple(sorted(kwargs.items())))
         result = wrapper.cache.get(key)
-        # print("wr", wrapper.__dict__)
-        # print("func_dict", func.__dict__)
-        # print("func", func)
         if not result:
             result = func(*args, **kwargs)
             wrapper.cache[key] = result
@@ -195,10 +188,5 @@ def main():
     print(fib.calls, "calls made")
 
 
-def main_test():
-    print(fib(3))
-
-
 if __name__ == "__main__":
     main()
-    # main_test()
